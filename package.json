@@ -1,0 +1,49 @@
+{
+  "name": "react-native-usb-serialport",
+  "version": "2.3.3",
+  "description": "High performance JAVA native gateway passthrough between multi usb serial port and multi socket without JS bridge, or just use multi usb serial port or socket alone",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "android",
+    "android serialport",
+    "ch34x",
+    "gateway",
+    "multi usb serial port",
+    "native",
+    "react-native-tcp-socket",
+    "react-native-usb-serialport",
+    "react native usb serialport communication",
+    "passthrough",
+    "react-native",
+    "serial port",
+    "serial port gateway",
+    "serialport",
+    "serialport gateway",
+    "socket",
+    "tcp",
+    "uart",
+    "uart gateway",
+    "usb",
+    "JAVA native gateway",
+    "JS bridge gateway",
+    "USB device access pop-up suppression"
+  ],
+  "author": "Melih YARIKKAYA, Li Zheng, Rapsssito",
+  "license": "MIT",
+  "peerDependencies": {
+    "react-native": "^0.59.0"
+  },
+  "dependencies": {
+    "buffer": "^5.4.3",
+    "eventemitter3": "^4.0.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flyskywhy/react-native-usb-serialport.git"
+  },
+  "homepage": "https://github.com/flyskywhy/react-native-usb-serialport.git",
+  "types": "./types/index.d.ts"
+}
