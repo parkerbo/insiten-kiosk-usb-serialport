@@ -228,6 +228,7 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
 
   private void fillDriverList() {
     driverList = new ArrayList<>();
+    driverList.add("AUTO");
     driverList.add("ftdi");
     driverList.add("cp210x");
     driverList.add("pl2303");
@@ -283,6 +284,8 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
   @ReactMethod
   public void setDriver(String driver) {
     if(driver.isEmpty() || !driverList.contains(driver.trim())) {
+      eventEmit(onErrorEvent, createError("Line 286 driver not found in driver list"));
+
       eventEmit(onErrorEvent, createError(Definitions.ERROR_DRIVER_TYPE_NOT_FOUND, Definitions.ERROR_DRIVER_TYPE_NOT_FOUND_MESSAGE));
       return;
     }
@@ -377,23 +380,28 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
 
   @ReactMethod
   public void connectDevice(String deviceName, int baudRate) {
+    eventEmit(onErrorEvent, createError(deviceName, "Line 380"));
     try {
       if(!usbServiceStarted){
+        eventEmit(onErrorEvent, createError(deviceName, "Line 383"));
         eventEmit(onErrorEvent, createError(Definitions.ERROR_USB_SERVICE_NOT_STARTED, Definitions.ERROR_USB_SERVICE_NOT_STARTED_MESSAGE));
         return;
       }
 
       if(deviceName.isEmpty() || deviceName.length() < 0) {
+        eventEmit(onErrorEvent, createError(deviceName, "Line 389"));
         eventEmit(onErrorEvent, createError(Definitions.ERROR_CONNECT_DEVICE_NAME_INVALID, Definitions.ERROR_CONNECT_DEVICE_NAME_INVALID_MESSAGE));
         return;
       }
 
       if(serialPorts.get(deviceName) != null) {
+        eventEmit(onErrorEvent, createError(deviceName, "Line 395"));
         eventEmit(onErrorEvent, createError(deviceName, Definitions.ERROR_SERIALPORT_ALREADY_CONNECTED, Definitions.ERROR_SERIALPORT_ALREADY_CONNECTED_MESSAGE));
         return;
       }
 
       if(baudRate < 1){
+        eventEmit(onErrorEvent, createError(deviceName, "Line 401"));
         eventEmit(onErrorEvent, createError(deviceName, Definitions.ERROR_CONNECT_BAUDRATE_EMPTY, Definitions.ERROR_CONNECT_BAUDRATE_EMPTY_MESSAGE));
         return;
       }
@@ -405,17 +413,21 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
       UsbDevice device = chooseDevice(deviceName);
 
       if(device == null) {
+        eventEmit(onErrorEvent, createError(deviceName, "Line 411, device = null"));
         eventEmit(onErrorEvent, createError(deviceName, Definitions.ERROR_X_DEVICE_NOT_FOUND, Definitions.ERROR_X_DEVICE_NOT_FOUND_MESSAGE + deviceName));
         return;
       }
 
       if (usbManager.hasPermission(device)) {
+        eventEmit(onErrorEvent, createError(deviceName, "Line 416, device has permission"));
         startConnection(device, true);
       } else {
+        eventEmit(onErrorEvent, createError(deviceName, "Line 419, device needs permission"));
         requestUserPermission(device);
       }
 
     } catch (Exception err) {
+      eventEmit(onErrorEvent, createError(deviceName, "Line 424, catch error"));
       eventEmit(onErrorEvent, createError(deviceName, Definitions.ERROR_CONNECTION_FAILED, Definitions.ERROR_CONNECTION_FAILED_MESSAGE + " Catch Error Message:" + err.getMessage()));
     }
   }
@@ -643,18 +655,23 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
       try {
         UsbSerialDevice serialPort;
         if(driver.equals("AUTO")) {
+          eventEmit(onErrorEvent, createError("Line 658 DRIVER = AUTO"));
           serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection, portInterface);
         } else {
+          eventEmit(onErrorEvent, createError("Line 661 DRIVER =", driver));
           serialPort = UsbSerialDevice.createUsbSerialDevice(driver, device, connection, portInterface);
         }
         if(serialPort == null) {
           // No driver for given device
+
+          eventEmit(onErrorEvent, createError("Line 667 NO DRIVER GIVEN, serialPort = null"));
           Intent intent = new Intent(ACTION_USB_NOT_SUPPORTED);
           mReactContext.sendBroadcast(intent);
           return;
         }
 
         if(!serialPort.open()){
+          eventEmit(onErrorEvent, createError("Line 674 serial port not opened"));
           Intent intent = new Intent(ACTION_USB_NOT_OPENED);
           mReactContext.sendBroadcast(intent);
           return;
@@ -663,8 +680,10 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
         serialPorts.put(device.getDeviceName(), serialPort);
         int baud;
         if(autoConnect){
+          eventEmit(onErrorEvent, createError("Line 683"));
           baud = autoConnectBaudRate;
         }else {
+          eventEmit(onErrorEvent, createError("Line 686"));
           baud = BAUD_RATE;
         }
         serialPort.setBaudRate(baud);
@@ -677,6 +696,7 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
           @Override
           public void onReceivedData(byte[] bytes) {
             if (bytes.length == 0) {
+              eventEmit(onErrorEvent, createError("Line 699 no vytes received"));
               // onCatalystInstanceDestroy will cause here
               return;
             }
@@ -693,6 +713,7 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
               String payloadKey = "payload";
 
               WritableMap params = Arguments.createMap();
+              eventEmit(onErrorEvent, createError("Line 716, bytes found:", bytes));
 
               if(returnedDataType == Definitions.RETURNED_DATA_TYPE_INTARRAY) {
                 WritableArray intArray = new WritableNativeArray();
@@ -733,7 +754,7 @@ public class RNSerialportModule extends ReactContextBaseJavaModule implements Li
   private void requestUserPermission(UsbDevice device) {
     if(device == null)
       return;
-    PendingIntent mPendingIntent = PendingIntent.getBroadcast(mReactContext, 0 , new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
+    PendingIntent mPendingIntent = PendingIntent.getBroadcast(mReactContext, 0 , new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_MUTABLE);
     usbManager.requestPermission(device, mPendingIntent);
   }
 
